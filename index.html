@@ -16,8 +16,97 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section>
+					<h2>Smart Symbolic Graphing Calculator</h2>
+					<p>Julian Alvarez</p>
+					<p>Computer Engineering Program</p>
+					<p>Engineering Department</p>
+					<p>University of Houston - Clear Lake</p>
+				</section>
+				<section>
+					<h2>Background</h2>
+					<p>The project utilizes the Giac library to perform mathematical computations 
+						and LVGL to draw the GUI to the display. Additionally, it utilizes Wi-Fi to enable faculty 
+						and test administrators to limit the capabilities of the calculator to prevent 
+						cheating in testing situations.
+					</p>
+				</section>
+				<section>
+					<h2>Technologies Used</h2>
+				</section>
+				<section>
+					<h2>LVGL</h2>
+					<section>A lightweight embedded library for displays and touchscreens,
+						providing everything required to build fully-featured embedded GUIs.
+					</section>
+					<section>
+						<ul>
+							<li>Small memory footprint</li>
+							<li>Multiplatform</li>
+							<li>Display-agnostic</li>
+							<li>Large library of widgets</li>
+							<li>FOSS C library (MIT)</li>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<h2>GIAC</h2>
+					<section>
+						FOSS Computer Algebra System (CAS) for Windows, MacOS, Unix-like, and embedded systems.
+					</section>
+					<section>
+						<ul>
+							<li>Written in C++14</li>
+							<li>Uses GNU Build System</li>
+							<li>CAS computing kernel</li>
+						</ul>
+					</section>
+					<section>
+						Already in use in calculators such as:
+						<ul>
+							<li>HP Prime</li>
+							<li>Casio CG10/CG20/CG50</li>
+							<li>Fx-9750GIII/9860GIII</li>
+							<li>TI Nspire</li>
+						</ul>
+					</section>
+					<section>
+						Available on the web at: <a href="https://www.geogebra.org/?lang=en">Geogebra</a>
+						<img src="Geogebra.png" alt="Geogebra Logo" width="40%">
+					</section>
+				</section>
+				<section>
+					<section><p class="r-fit-text">Hardware</p></section>
+					<section>
+						<p class="r-fit-text">Raspberry Pi Zero 2 W</p>
+						<img src="piz2w.png" alt="Raspberry Pi Zero 2 W" width="60%">
+					</section>
+					<section>
+						<p class="r-fit-text">320x240 Touchscreen with ILI9341 controller</p>
+						<img src="ili9341.JPG" alt="ILI9341 Touchscreen Display" width="60%">
+					</section>
+					<section>
+						<p class="r-fit-text">Handmade 35 button matrix</p>
+					</section>
+					<section>
+						<p class="r-fit-text">MCP23017 Port Expander</p>
+						<img class="r-stretch" src="mcp23017.jpg" alt="MCP23107 Port Expander">
+					</section>
+				</section>
+				<section>
+					<div class="mermaid">
+						<pre>
+							%%{init: {"flowchart": {"htmlLabels": false}} }%%
+							flowchart TD
+							A(Raspberry Pi Zero 2 W)== SPI ==>B 
+							B(Screen)== SPI ==>A
+							A== I2C ==>C(MCP23017)
+							C== I2C ==>A
+							C==>D(Keypad) 
+							D==>C
+						</pre>
+					</div>
+				</section>
 			</div>
 		</div>
 
@@ -25,15 +114,16 @@
 		<script src="plugin/notes/notes.js"></script>
 		<script src="plugin/markdown/markdown.js"></script>
 		<script src="plugin/highlight/highlight.js"></script>
+		<script src="node_modules/reveal.js-mermaid-plugin/plugin/mermaid/mermaid.js"></script>
 		<script>
 			// More info about initialization & config:
 			// - https://revealjs.com/initialization/
 			// - https://revealjs.com/config/
 			Reveal.initialize({
 				hash: true,
-
+				mermaid: {},
 				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMermaid ]
 			});
 		</script>
 	</body>
