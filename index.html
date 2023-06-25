@@ -8,7 +8,7 @@
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
+		<link rel="stylesheet" href="dist/theme/dracula.css">
 
 		<!-- Theme used for syntax highlighted code -->
 		<link rel="stylesheet" href="plugin/highlight/monokai.css">
@@ -19,9 +19,6 @@
 				<section>
 					<h2>Smart Symbolic Graphing Calculator</h2>
 					<p>Julian Alvarez</p>
-					<p>Computer Engineering Program</p>
-					<p>Engineering Department</p>
-					<p>University of Houston - Clear Lake</p>
 				</section>
 				<section>
 					<h2>Background</h2>
@@ -36,10 +33,10 @@
 				</section>
 				<section>
 					<h2>LVGL</h2>
-					<section>A lightweight embedded library for displays and touchscreens,
+					<section data-menu-title="LVGL Description">A lightweight embedded library for displays and touchscreens,
 						providing everything required to build fully-featured embedded GUIs.
 					</section>
-					<section>
+					<section data-menu-title="LVGL Info List">
 						<ul>
 							<li>Small memory footprint</li>
 							<li>Multiplatform</li>
@@ -94,6 +91,7 @@
 					</section>
 				</section>
 				<section>
+					<!-- <p class="r-fit-text">Hardware Design Overview</p> -->
 					<div class="mermaid">
 						<pre>
 							%%{init: {"flowchart": {"htmlLabels": false}} }%%
@@ -107,6 +105,712 @@
 						</pre>
 					</div>
 				</section>
+				<section>
+					<div class="mermaid">
+						<pre>
+							%%{init: {"flowchart": {"htmlLabels": false}} }%%
+							flowchart TD
+							A("Server(Admin)") --> B(Calculator 1) & C(Calculator 2) & D(Calculator 2)
+						</pre>
+					</div>
+					<section><p>Server-Client Architecture</p></section>
+					<section>
+						<p>Admin restricts capabilities of Calculators</p>
+						<ul>
+							<li>CAS</li>
+							<li>Graphing</li>
+							<li>Functions</li>
+						</ul>
+					</section>
+					<section>
+						<p>Admin Collects usage data in form of logs</p>
+						<ul>
+							<li>Blacklisted Function Call</li>
+							<li>Whitelisted Function Call</li>
+							<li>Graphing Expressions</li>
+							<li>Button Presses</li>
+							<li>Journalctl</li>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<section data-menu-title="Connection State Diagram">
+						<p>Calculator Connection State Diagram</p>
+						<div class="mermaid">
+							<pre>
+								stateDiagram-v2 
+									noWifi : Not connected to an AP
+									yesWifi : Connected to an AP
+									yesAdmin: Connected to an Administrator
+									noWifi --> yesWifi : connect
+									yesWifi --> noWifi : disconnect
+									yesWifi --> yesAdmin : connect
+									yesAdmin --> yesWifi : disconnect
+							</pre>
+						</div>
+					</section>
+				</section>
+				<section data-menu-title="Admin Connect Sequence">
+					<section>
+					<div class="mermaid">
+						<pre>
+							sequenceDiagram
+								participant C as Calculator
+								participant A as Administrator
+
+								C->>+A: connectionInfo
+								A-->>-C: adminInfo
+						</pre>
+					</div>
+					<br>
+					Simple Admin Info Search
+					</section>
+					<section>
+						<div class="mermaid">
+							<pre>
+								sequenceDiagram
+									participant C as Calculator
+									participant A as Administrator
+	
+									C->>+A: connectionInfo
+									A-->>-C: adminInfo
+							</pre>
+						</div>
+						<br>
+						When searching for potential administrators to connect to, calculators send
+						out a <b>connectionInfo</b> json payload to all that are available. An 
+						<b>adminInfo</b> json is expected in return.
+					</section>
+					<section data-auto-animate>
+						ConnectionInfo Json
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="2|3|4|5-9">
+							{
+								ssgcType: "connectionInfo",
+								clientIP: "192.168.1.1",
+								clientName: "John Doe",
+								clientVersion: {
+									major: 1,
+									minor: 0,
+									bugfix: 6,
+								}
+							}
+						</code></pre>
+					</section>
+					<section data-auto-animate>
+						AdminInfo Json
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="2|1-6">
+							{
+								ssgcType: "adminInfo",
+								adminIP: "192.168.2.11",
+								adminName: "Xiaokun Yang",
+								adminExtra: "D2401 Exam Room"
+							}
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section data-menu-title="Sequence Diagram (Calculator & Admin Connection)">
+						<div class="mermaid">
+							<pre>
+								sequenceDiagram
+									participant C as Calculator
+									participant A as Administrator
+	
+									C->>+A: connectionInfo
+									A-->>-C: adminInfo
+									C->>+A: connectionRequest
+									A-->>-C: connectionPermissionReply
+									C->>A: connectionPermissionAccept
+									Note over A,C: Admin and Calculator are now connected
+									loop Asynchronously
+										A-->>C: adminData
+										C->>A: clientData
+									end
+							</pre>
+						</div>
+					</section>
+					<section data-menu-title="Sequence Diagram (Loop & Revoke)">
+						<div class="mermaid">
+							<pre>
+								sequenceDiagram
+									participant C as Calculator
+									participant A as Administrator 
+									Note over A,C: Admin and Calculator are already connected
+									loop Asynchronously
+										A-->>C: adminData
+										C->>A: clientData
+										opt Disconnect
+											alt Client engages
+												C->>A: clientRevoke
+											else Admin engages
+												A-->>C: adminRevoke
+											end
+											A-->C: Websocket closed between Admin and Calculator
+										end
+									end
+							</pre>
+						</div>
+					</section>
+					<section data-auto-animate data-menu-title="Connection Permission Reply">
+						connectionPermissionReply Json
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="2|3-11|12-17|18-21|22">
+							{
+								ssgcType: "connectionPermissionReply",
+								permissions: {
+									functionRestrictionsEnable: true,
+									graphingRestrictionsEnable: false,
+									historyTrackingEnable: false,
+									screenCaptureEnable: true,
+									remoteConnectionEnable: true,
+									settingOverideEnable: true,
+									payloadEnable: true
+								},
+								functionBlacklist: [
+									"solve", 
+									"simplify", 
+									"factor", 
+									"integrate", 
+									"differentiate"],
+								screenCaptureInfo: {
+									screenshotFrequency: 1000, // millis
+									recordingEnable: true, // realtime remote capture
+								},
+								settingOverrideInfo: [...]
+							}
+						</code></pre>
+					</section>
+					<section data-auto-animate data-menu-title="Connection Accepted">
+						Permission Reply
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers>
+							{
+								ssgcType: "connectionPermissionAccept",
+								clientIP: "192.168.1.1",
+								clientName: "John Doe"
+							}
+						</code></pre>
+					</section>
+					<section data-auto-animate data-menu-title="Connection Rejected">
+						Permission Reply
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers>
+							{
+								ssgcType: "connectionPermissionReject",
+								clientIP: "192.168.1.1",
+								clientName: "John Doe",
+								rejectionReason: "Permissions Rejected"
+							}
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<p class="r-fit-text">CODE?</p>
+					</section>
+					<section data-auto-animate data-menu-title="Wifi">
+						state.hxx
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="3-8|10-15|17|21-24|21-27|29-31|33-36|38-42|46-50|51|53-57|57"><script type="text/template">
+							namespace calc_state{
+								namespace wifi{
+									struct WifiNetworkInfo{
+										std::string mac_address;
+										std::string ssid;
+										int connection_strength;
+										bool has_psk;
+									};
+							
+									enum WifiConnectionResult{
+										ConnectionFailure,
+										InternalConnectionFailure,
+										ConnectionSuccessWithInternet,
+										ConnectionSuccessWithoutInternet
+									};
+							
+									using easywsclient::WebSocket;
+							
+									class WifiState {
+										public:
+										/// Checks whether or not the device has internet.
+										/// NOTE: This method is blocking.
+										/// Calling this method is thread-safe.
+										void internet_connection_test();
+										bool is_connected() const;
+										void disconnect();
+										bool has_internet() const;
+										
+										/// Gets this device's network internal IP address.
+										Option<std::string> ip();
+										Option<std::string> ips();
+
+										/// Scans for nearby wireless networks.
+										/// NOTE: This method is blocking.
+										/// Calling this method is thread-safe.
+										std::vector<WifiNetworkInfo> scan();
+
+										/// Connects to a given wireless network.
+										/// Also checks for network connectivity.
+										/// NOTE: This method is blocking.
+										/// Calling this method is thread-safe.
+										WifiConnectionResult connect(WifiNetworkInfo const& network, std::string psk);
+						
+										private:
+
+										/// If connected to a network, this method sets _ip and _ips
+										/// To values.
+										/// ip is set to the device's ip on local network.
+										/// _ips is set to the ip with a subnet.
+										void obtain_ip_address();
+										int db_to_percentage(int db);
+
+										bool _is_connected, _has_internet;
+										std::string _ip;
+										std::string _ips;
+										struct {Option<WifiNetworkInfo> info; int num;} connected_network;
+										std::mutex scan_mutex, connect_mutex;
+									};
+								}
+							}
+						</script></code></pre>
+					</section>
+					<section data-auto-animate data-menu-title="Admin">
+						state.hxx
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="3-8|12|13-18|21-24|25-28|29-30|31-37|38-45|46|47-48|50|54-57|60"><script type="text/template">
+							namespace calc_state{
+								namespace admin_app{
+									struct AdminInfo {
+										std::string ip;
+										std::string port;
+										std::string name;
+										Option<easywsclient::WebSocket::pointer> socket;
+									};
+									
+									class AdminState {
+										public:
+										AdminState(wifi::WifiState& ws);
+										/// Attempts to connect to an admin app
+										/// Returns a websocket on success.
+										/// Sets current_admin on success.
+										/// NOTE: This method is blocking.
+										/// Calling this method is thread-safe
+										void connect(AdminInfo const& admin);
+										
+							
+										/// Disconnects from an admin app.
+										/// NOTE: This method is blocking
+										/// Calling this method is thread-safe.
+										void disconnect();
+										/// Scans for administrators on the device's network.
+										/// NOTE: This method is blocking.
+										/// Calling this method is thread-safe.
+										std::vector<AdminInfo> scan(std::string const& port = "6969");
+										bool is_connecting();
+										bool is_connected() const;
+										/// Attempts to get permissions from the current admin.
+										/// Sends a JSON object that complies with the connectionPermission schema
+										/// Receives a connectionPermissionReply JSON object from an admin and returns the
+										/// permissions as a vector of strings.
+										/// NOTE: This method is blocking
+										/// Calling this method is thread-safe.
+										Option<std::vector<std::string>> get_permissions();
+										/// Attempts to get information about an admin.
+										/// Sends a JSON object that complies with the connectionRequest schema
+										/// Receives a adminInfo JSON object from an admin and returns the information
+										/// as an AdminInfo struct.
+										/// NOTE: This method is blocking
+										/// Calling this method is thread-safe.
+										Option<AdminInfo> get_admin_info(std::string const& ip);
+										Option<AdminInfo> get_current_admin();
+										void send_data(std::string const& data);
+										void set_device_name(std::string new_name);
+										std::string device_name() const;
+							
+										friend void poll_websocket(AdminState* state);
+
+										private:
+
+										wifi::WifiState& ws;
+										std::mutex connecting_mutex, disconnecting_mutex, scan_mutex, permission_mutex, info_mutex, reply_mutex;
+										Option<AdminInfo> current_admin;
+										std::string _device_name = "UNKNOWN";
+									};
+									
+									void poll_websocket(AdminState* state);
+								}
+							}
+						</script></code></pre>
+					</section>
+					<section data-auto-animate data-menu-title="Json">
+						state.hxx
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="4-6|8|9-15|16-25|26-35|36-41|42-46|47-51|52"><script type="text/template">
+							namespace calc_state{
+								namespace json {
+
+									using nlohmann::json;
+									using nlohmann::ordered_json;
+									using nlohmann::json_schema::json_validator;
+							
+									const std::string _ph = "PLACEHOLDER";
+							
+									const ordered_json ssgcData = {
+										{"ssgcType", "clientData"},
+										{"clientIP", _ph},
+										{"clientName", _ph},
+										{"data", _ph}
+									};
+									const ordered_json connectionInfo = {
+										{"ssgcType", "connectionInfo"},
+										{"clientIP", _ph},
+										{"clientName", _ph},
+										{"clientVersion", {
+											{"major",0},
+											{"minor",0},
+											{"bugfix",0}
+										}}
+									};
+									const ordered_json connectionRequest = {
+										{"ssgcType", "connectionRequest"},
+										{"clientIP", _ph},
+										{"clientName", _ph},
+										{"clientVersion", {
+											{"major",0},
+											{"minor",0},
+											{"bugfix",0}
+										}}
+									};
+									const ordered_json connectionRevoke = {
+										{"ssgcType", "clientRevoke"},
+										{"revokeReason","clientDisconnection"},
+										{"clientIP", _ph},
+										{"clientName", _ph}
+									}; 
+									const ordered_json permissionAcceptReply = {
+										{"ssgcType","connectionPermissionAccept"},
+										{"clientIP", _ph},
+										{"clientName", _ph}
+									};
+									const ordered_json permissionRejectReply = {
+										{"ssgcType","connectionPermissionReject"},
+										{"clientIP", _ph},
+										{"clientName", _ph}
+									};
+									bool validate(json const& obj, json const& schema);
+									
+								}
+							}
+						</script></code></pre>
+					</section>
+					<section data-auto-animate data-menu-title="Json Schemas Include">
+						schemas.hpp
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="6-8"><script type="text/template">
+							#ifndef SCHEMA_H
+							#define SCHEMA_H
+							#include<string>
+							#include <nlohmann/json.hpp>
+							namespace schemas{
+							const nlohmann::json clientLogSchema = nlohmann::json::parse(
+							#include "/home/movrax/Documents/Smart_Symbolic_Graphing_Calculator/schemas/include_gen/clientLog.out"
+							);
+							const nlohmann::json connectionAdminInfoSchema = nlohmann::json::parse(
+							#include "/home/movrax/Documents/Smart_Symbolic_Graphing_Calculator/schemas/include_gen/connectionAdminInfo.out"
+							);
+							const nlohmann::json connectionPermissionSchema = nlohmann::json::parse(
+							#include "/home/movrax/Documents/Smart_Symbolic_Graphing_Calculator/schemas/include_gen/connectionPermission.out"
+							);
+							const nlohmann::json connectionPermissionReplySchema = nlohmann::json::parse(
+							#include "/home/movrax/Documents/Smart_Symbolic_Graphing_Calculator/schemas/include_gen/connectionPermissionReply.out"
+							);
+							const nlohmann::json connectionRequestSchema = nlohmann::json::parse(
+							#include "/home/movrax/Documents/Smart_Symbolic_Graphing_Calculator/schemas/include_gen/connectionRequest.out"
+							);
+							const nlohmann::json connectionRevokeSchema = nlohmann::json::parse(
+							#include "/home/movrax/Documents/Smart_Symbolic_Graphing_Calculator/schemas/include_gen/connectionRevoke.out"
+							);
+							const nlohmann::json ssgcDataSchema = nlohmann::json::parse(
+							#include "/home/movrax/Documents/Smart_Symbolic_Graphing_Calculator/schemas/include_gen/ssgcData.out"
+							);
+
+							}
+							#endif
+						</script></code></pre>
+					</section>
+					<section data-auto-animate data-menu-title="clientLog.out">
+						clientLog.out
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers><script type="text/template">
+							R"c++INCLUDE(
+							{
+								"$schema": "http://json-schema.org/draft-07/schema#",
+								"description": "Information regarding logging a user, which follows the permissions/requirements accepted by a client from an administrator",
+								"properties": {
+									"ssgcType": {
+										"description": "SSGC Data Type",
+										"type": "string",
+										"enum": ["functionLog", "calculationLog", "expressionLog", "buttonPressLog", "journalctlLog"]
+									},
+									"clientIP": {
+										"description": "Internal IP address of a client (calculator)",
+										"type": "string",
+										"format": "ipv4"
+									},
+									"clientName": {
+										"description": "Name given by a client (calculator)",
+										"type": "string"
+									},
+									"data": {
+										"description": "A string payload that contains information as detailed in the ssgcType.",
+										"type": "string"
+									}
+								},
+								"type": "object",
+								"required": ["ssgcType", "clientIP", "clientName", "data"]
+							})c++INCLUDE"
+						</script></code></pre>
+					</section>
+					<section data-auto-animate data-menu-title="How Generation???">
+						<p>How are these .out files generated?</p>
+					</section>
+					<section data-auto-animate="" data-menu-title="This is how!">
+						<p>How are these .out files generated?</p>
+						<p><b>CMake!!!</b></p>
+					</section>
+					<section data-auto-animate data-menu-title="Leverage CMake!!!">
+						<b>🔥 schemas/CMakeLists.txt 🔥</b>
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers><script type="text/template">
+							set(SCHEMA_HEADER "#ifndef SCHEMA_H\n#define SCHEMA_H\n#include<string>\n#include <nlohmann/json.hpp>\nnamespace schemas{\n")
+
+							function(schema_gen file_input)
+								set(schema_path ${CMAKE_CURRENT_LIST_DIR}/${file_input}.schema.json)
+								set(out_path ${CMAKE_CURRENT_LIST_DIR}/include_gen/${file_input}.out)
+								set(SCHEMA_HEADER "${SCHEMA_HEADER}const nlohmann::json ${file_input}Schema = nlohmann::json::parse(\n#include \"${out_path}\"\n)\;\n" PARENT_SCOPE)
+								make_includable(${schema_path} ${out_path})
+							endfunction()
+							
+							schema_gen(clientLog)
+							schema_gen(connectionAdminInfo)
+							schema_gen(connectionPermission)
+							schema_gen(connectionPermissionReply)
+							schema_gen(connectionRequest)
+							schema_gen(connectionRevoke)
+							schema_gen(ssgcData)
+							MESSAGE(STATUS "Generated schemas.")
+							
+							set(SCHEMA_HEADER "${SCHEMA_HEADER}\n}\n#endif\n")
+							file(WRITE ${CMAKE_CURRENT_LIST_DIR}/include_gen/schemas.hpp ${SCHEMA_HEADER})
+							include_directories(${CMAKE_CURRENT_LIST_DIR}/include_gen)
+						</script></code></pre>
+					</section>
+					<section data-menu-title="SSGC Global State">
+						state.hxx
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="4|5|6|7|9-10|11-14|15|16|18|21-23|28"><script type="text/template">
+							namespace calc_state{
+								class State{
+									public:
+									wifi::WifiState ws;
+									admin_app::AdminState as;
+									nlohmann::ordered_json permissions;
+									std::string port;
+									State();
+									void set_screenshot_timer();
+									void set_websocket_timer();
+									/// Takes a screenshot and saves it in ./image.bin
+									/// NOTE: This method is blocking
+									///
+									void take_screenshot();
+									void screenshot_handle();
+									bool connect_to_admin_app(admin_app::AdminInfo const& admin);
+									
+									friend void screenshot_cb(State* state);
+									
+									private:
+									std::mutex screenshot_mutex;
+									lv_timer_t* screenshotTimer;
+									lv_timer_t* pollWebsocketTimer;
+								};
+								void screenshot_cb(State* state);
+							}
+
+							extern calc_state::State global_state;
+						</script></code></pre>
+					</section>
+				</section>
+				<section>
+					<section data-auto-animate data-menu-title="How calculate?">
+						<p>How does it calculate?</p>
+					</section>
+					<section data-menu-title="Calculation video">
+						<p>How does it calculate?</p>
+						<video width="60%" data-autoplay data-background-video-loop="loop" src="calculatorvid.mp4"></video>
+					</section>
+					<section data-menu-title="Calculator.h">
+						<b>Calculator.h</b>
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="1-46|4|5-11|29-44|39"><script type="text/template">
+							#ifndef CALCULATOR_H
+							#define CALCULATOR_H
+
+							#include "calc_conf.h"
+							#if ENABLE_GIAC
+							#if ENABLE_LINUX
+							#include <giac/config.h>
+							#endif
+							#include <giac/gen.h>
+							#include <giac/giac.h>
+							#endif
+							#include <iostream>
+
+							#if ENABLE_MCP_KEYPAD
+							#include <Keypad.hxx>
+							#endif
+							#include <lvgl/lvgl.h>
+							#include <string>
+							#include <sstream>
+							#include <unistd.h>
+							#include <tabs.hxx>
+
+							#include <iostream>
+							#include <fstream>
+							#include <gmpxx.h>
+							#include <nlohmann/json.hpp>
+							#include <ctime>
+
+							namespace Calculator{
+								void createDemo();
+								void update(lv_timer_t * timer);
+								lv_obj_t* lv_textarea_input(lv_obj_t* parent);
+								lv_obj_t* lv_textarea_output(lv_obj_t* parent);
+								void main_screen_driver(lv_obj_t* parent, bool first_screen);
+								lv_obj_t* lv_input_history_ta(lv_obj_t* parent, std::string output, lv_obj_t* active_ta);
+								lv_obj_t* lv_result_ta(lv_obj_t* parent, std::string output, lv_obj_t* active_ta);	
+								static void kb_event_cb(lv_event_t* e);
+								static void toggle_kb_event_handler(lv_event_t* e);
+								static void active_ta_event_handler(lv_event_t* e);
+								void storeFunctionTA(lv_obj_t* ta);
+								void storeWifiTA(lv_obj_t* ta);
+								static void clear_scr_btn_event_handler(lv_event_t* e);
+								static void input_history_ta_event_handler(lv_event_t* e);	
+							}
+
+							#endif
+
+						</script></code></pre>
+					</section>
+					<section data-auto-animate data-menu-title="Calculator.cpp">
+						<b>Calculator.cpp</b>
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="1-134|23|24|26-30|37-43|46,47"><script type="text/template">
+							static void Calculator::active_ta_event_handler(lv_event_t* e)
+							{   
+								lv_event_code_t code = lv_event_get_code(e);
+								lv_obj_t* ta = lv_event_get_target(e);
+								lv_obj_t* parent = lv_obj_get_parent(ta);
+								if (code == LV_EVENT_CLICKED || code == LV_EVENT_FOCUSED)
+								{
+									/*Focus on the clicked text area*/
+									if (kb != NULL) lv_keyboard_set_textarea(kb, ta);
+									lv_obj_scroll_to_view(ta, LV_ANIM_OFF);
+									lv_obj_scroll_by(parent, 0, 15, LV_ANIM_OFF);
+								}
+								else if (code == LV_EVENT_READY)
+								{
+									if(total > 60)
+									{
+										lv_obj_clean(parent);
+										Calculator::main_screen_driver(parent, false);
+										return;
+									}
+									LV_LOG_USER("Ready, current text: %s", lv_textarea_get_text(ta));
+
+									Solve* solver = static_cast<Solve*>(e->user_data);
+									std::string func_expression = std::string(lv_textarea_get_text(e->target));
+									std::string output;
+									bool blacklisted = false;
+									//Check to see if functions are restricted
+									if(global_state.permissions.contains("permissions") 
+										&& global_state.permissions["permissions"].contains("functionRestrictionsEnable")
+										&& global_state.permissions["permissions"]["functionRestrictionsEnable"].get<bool>()){
+										
+										std::vector<std::string> blacklistedFunctions;
+										if (global_state.permissions.contains("functionBlacklist"))
+											blacklistedFunctions = global_state.permissions["functionBlacklist"].get<std::vector<std::string>>();
+
+										
+										for(std::string const& function: blacklistedFunctions){
+											if (func_expression.find(function) != std::string::npos){
+												output = "Function is blacklisted!";
+												bl = true;
+												break;
+											}
+										}
+									}
+									
+									if (!blacklisted)
+										output = solver->call_giac(func_expression);
+
+									/*Reading Time Info For Logging.*/
+									const std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+									std::string current_time(std::ctime(&time));
+
+									History::HistoryManager manager;
+									History::InputHistory temp;
+									manager.push_back(History::InputHistory(current_time, "guest", func_expression, output));
+									
+									// debugging info.
+									#if 0
+									temp = manager.get_last();
+									std::cout << "time: " << temp.time << "\tuser: " << temp.user << "\tinput: " << temp.input << "\toutput: " << temp.output << "\n";
+									#endif
+
+									const char *copy_input = lv_textarea_get_text(ta);
+									
+									/*Create the new text areas*/
+									Calculator::lv_input_history_ta(parent, copy_input, ta);
+									Calculator::lv_result_ta(parent, output, ta);
+									lv_obj_align(ta, LV_ALIGN_BOTTOM_MID, 0, ( 35 * total) + 35);
+									lv_textarea_set_text(ta, "");
+									lv_obj_scroll_to_view(ta, LV_ANIM_OFF);
+
+									/*Put kb in view*/
+									lv_obj_align_to(kb, parent, LV_ALIGN_BOTTOM_MID, 0, 0);
+									lv_obj_scroll_to_view(kb, LV_ANIM_OFF);
+									if(!lv_obj_has_flag(kb, LV_OBJ_FLAG_HIDDEN))
+									{
+										lv_obj_set_y(ta, lv_obj_get_y_aligned(ta) - 80);
+									}
+									lv_obj_scroll_by(parent, 0, 15, LV_ANIM_OFF);
+								}
+
+							}
+						</script></code></pre>
+					</section>
+					<section data-menu-title="Leverage CMake!!!">
+						<b>🔥 Solve 🔥</b>
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers><script type="text/template">
+							class Solve
+							{
+								public:
+								giac::context ctx;
+
+								Solve(){
+									giac::gen g("approx_mode:=1", &ctx);
+									giac::eval(g, &ctx);
+									assert(giac::approx_mode(&ctx) == true);
+								}
+
+								std::string call_giac(std::string input)
+								{      
+									//giac::approx_mode(false, &ctx); // Change graphing to calculate approximate values.
+									giac::gen g(input, &ctx);
+									std::cout << giac::eval(g, &ctx) << "\n";    
+									giac::gen args(input, &ctx);
+									std::string output = input + "\n";
+									try{
+										output = giac::gen2string(giac::eval(args, &ctx));
+									}
+									catch(...){
+										output = "ERROR: Something went wrong!\n";
+									}
+									return output;
+								}
+							};
+						</script></code></pre>
+					</section>
+				</section>
+				
 			</div>
 		</div>
 
@@ -115,15 +819,45 @@
 		<script src="plugin/markdown/markdown.js"></script>
 		<script src="plugin/highlight/highlight.js"></script>
 		<script src="node_modules/reveal.js-mermaid-plugin/plugin/mermaid/mermaid.js"></script>
+		<script src="node_modules/reveal.js-menu/menu.js"></script>
 		<script>
 			// More info about initialization & config:
 			// - https://revealjs.com/initialization/
 			// - https://revealjs.com/config/
 			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+				slideNumber: false,
+				transition: 'slide',
 				hash: true,
-				mermaid: {},
+				mermaid: {
+					theme: "dark",
+					fontFamily: "monospace",
+					flowchart: {
+						curve: "linear",
+						useMaxWidth: true,
+					},
+					
+				},
+				toolbar: {
+					position: 'bottom',
+					fullscreen: true,
+					captureMenu: true,
+				},
+				menu: {
+					side: 'left',
+					markers: true,
+					numbers: true,
+					themes: false,
+					transitions: false,
+				},
+				dependencies: [
+					{ src: 'plugin/toolbar/toolbar.js', async: true }
+				],
 				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMermaid ]
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMermaid, RevealMenu]
 			});
 		</script>
 	</body>
