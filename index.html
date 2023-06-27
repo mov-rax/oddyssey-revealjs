@@ -320,9 +320,12 @@
 									end
 							</pre>
 						</div>
+						<aside class="notes">
+							Previous sequence diagram continued.
+						</aside>
 					</section>
 					<section data-auto-animate data-menu-title="Connection Permission Reply">
-						connectionPermissionReply Json
+						<b>connectionPermissionReply Json</b>
 						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="2|3-11|12-17|18-21|22">
 							{
 								ssgcType: "connectionPermissionReply",
@@ -348,9 +351,13 @@
 								settingOverrideInfo: [...]
 							}
 						</code></pre>
+						<aside class="notes">
+							Response from the admin that returns the restrictions imposed on the calculator,
+							and the permissions given.
+						</aside>
 					</section>
 					<section data-auto-animate data-menu-title="Connection Accepted">
-						Permission Reply
+						<b>Permission Reply</b>
 						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers>
 							{
 								ssgcType: "connectionPermissionAccept",
@@ -358,9 +365,12 @@
 								clientName: "John Doe"
 							}
 						</code></pre>
+						<aside class="notes">
+							Response by calculator. Accepts what the admin requires.
+						</aside>
 					</section>
 					<section data-auto-animate data-menu-title="Connection Rejected">
-						Permission Reply
+						<b>Permission Reply</b>
 						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers>
 							{
 								ssgcType: "connectionPermissionReject",
@@ -369,6 +379,9 @@
 								rejectionReason: "Permissions Rejected"
 							}
 						</code></pre>
+						<aside class="notes">
+							Rejects what the admin requires.
+						</aside>
 					</section>
 				</section>
 				<section>
@@ -376,7 +389,7 @@
 						<p class="r-fit-text">CODE?</p>
 					</section>
 					<section data-auto-animate data-menu-title="Wifi">
-						state.hxx
+						<b>state.hxx</b>
 						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="3-8|10-15|17|21-24|21-27|29-31|33-36|38-42|46-50|51|53-57|57"><script type="text/template">
 							namespace calc_state{
 								namespace wifi{
@@ -439,9 +452,15 @@
 								}
 							}
 						</script></code></pre>
+						<aside class="notes">
+							WifiNetworkInfo struct holds info about a Wifi network while scanning.
+							easywsclient header-only C++ websocket library is used for communication.
+							Some wificlass methods work Asynchronously, some are blocking.
+							(Talk about the custom Option, because no C++17, only C++14)
+						</aside>
 					</section>
 					<section data-auto-animate data-menu-title="Admin">
-						state.hxx
+						<b>state.hxx</b>
 						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="3-8|12|13-18|21-24|25-28|29-30|31-37|38-45|46|47-48|50|54-57|60"><script type="text/template">
 							namespace calc_state{
 								namespace admin_app{
@@ -506,9 +525,13 @@
 								}
 							}
 						</script></code></pre>
+						<aside class="notes">
+							AdminInfo holds information from detected admin hosts from scanning the network.
+							websocket polling is just to make sure that the admin is still alive.
+						</aside>
 					</section>
 					<section data-auto-animate data-menu-title="Json">
-						state.hxx
+						<b>state.hxx</b>
 						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="4-6|8|9-15|16-25|26-35|36-41|42-46|47-51|52"><script type="text/template">
 							namespace calc_state{
 								namespace json {
@@ -566,9 +589,13 @@
 								}
 							}
 						</script></code></pre>
+						<aside class="notes">
+							Holds prefabricated jsons that comply with schemas used for validating
+							json objects. Validate func is used to do so, but how does it do it?
+						</aside>
 					</section>
 					<section data-auto-animate data-menu-title="Json Schemas Include">
-						schemas.hpp
+						<b>schemas.hpp</b>
 						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="6-8"><script type="text/template">
 							#ifndef SCHEMA_H
 							#define SCHEMA_H
@@ -600,9 +627,12 @@
 							}
 							#endif
 						</script></code></pre>
+						<aside class="notes">
+							By using the C++ preprocessor, we can include special .out files that contain the schema.
+						</aside>
 					</section>
 					<section data-auto-animate data-menu-title="clientLog.out">
-						clientLog.out
+						<b>clientLog.out</b>
 						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers><script type="text/template">
 							R"c++INCLUDE(
 							{
@@ -632,6 +662,11 @@
 								"required": ["ssgcType", "clientIP", "clientName", "data"]
 							})c++INCLUDE"
 						</script></code></pre>
+						<aside class="notes">
+							String literals around a json object! But saving like this doesn't allow for syntax highlighting,
+							and can only be used in the C++ project. If only there was a way to automate this at build time and 
+							transform normal schemas into C++ string literals...
+						</aside>
 					</section>
 					<section data-auto-animate data-menu-title="How Generation???">
 						<p>How are these .out files generated?</p>
@@ -639,6 +674,9 @@
 					<section data-auto-animate="" data-menu-title="This is how!">
 						<p>How are these .out files generated?</p>
 						<p><b>CMake!!!</b></p>
+						<aside class="notes">
+							Reason? bash scripts are not portable on windows (no powershell). And CMake is already used at build time. So why not?
+						</aside>
 					</section>
 					<section data-auto-animate data-menu-title="Leverage CMake!!!">
 						<b>🔥 schemas/CMakeLists.txt 🔥</b>
@@ -665,9 +703,12 @@
 							file(WRITE ${CMAKE_CURRENT_LIST_DIR}/include_gen/schemas.hpp ${SCHEMA_HEADER})
 							include_directories(${CMAKE_CURRENT_LIST_DIR}/include_gen)
 						</script></code></pre>
+						<aside class="notes">
+							Actually, even schemas.hpp is auto generated by CMake!!! Both the header and the .out files are automatically generated!
+						</aside>
 					</section>
 					<section data-menu-title="SSGC Global State">
-						state.hxx
+						<b>state.hxx</b>
 						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="4|5|6|7|9-10|11-14|15|16|18|21-23|28"><script type="text/template">
 							namespace calc_state{
 								class State{
@@ -1013,50 +1054,131 @@
 				</section>
 				<section>
 					<section data-auto-animate data-menu-title="Algorithm confusion?">
-						<h1>😕</h1>
+						<h1>🤖</h1>
 					</section>
 					<section data-auto-animate data-menu-title="Algorithm confusion?">
-						<h1>😕</h1><br>
+						<h1>🤖</h1><br>
 						<p>What kind of algorithm?</p>
 					</section>
 					<section data-menu-title="Video Slides Start" data-background-video="s1.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s1.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s2.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s3.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s4.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s3.mp4" data-background-color="#000">
+						<aside class="notes">
+							sin(2x)
+						</aside>
+					</section>
+					<section data-background-video="videos/s4.mp4" data-background-color="#000">
+						<aside class="notes">
+							sin(11x)
+						</aside>
+					</section>
 					<section data-background-video="videos/s5.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s6.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s7.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s8.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s9.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s10.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s11.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s11.mp4" data-background-color="#000">
+						<aside class="notes">
+							n_i = number of intervals
+							31 = number of points (must be odd)
+						</aside>
+					</section>
 					<section data-background-video="videos/s12.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s13.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s14.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s15.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s16.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s13.mp4" data-background-color="#000">
+						<aside class="notes">
+							list is of size n_i (number of intervals)
+							integers below is the active list
+						</aside>
+					</section>
+					<section data-background-video="videos/s14.mp4" data-background-color="#000">
+						<aside class="notes">
+							list is filled with the convolution of the x and y coordinates of the 31 dots 
+							with kernel ((-1, 0.25), (0, 0.5), (1, 0.25).
+							Estimate integral of second derivative over interval, use that as a refinement indicator.
+							integers below is the active list
+						</aside>
+					</section>
+					<section data-background-video="videos/s15.mp4" data-background-color="#000">
+						<aside class="notes">
+							Approximate end intervals as being the same curvature as those next to it.
+							This avoids computing the function in the end points
+						</aside>
+					</section>
+					<section data-background-video="videos/s16.mp4" data-background-color="#000">
+						<aside class="notes">
+							n_t = number of target refinements.
+							n_r = number of refinements.
+							I_c = One-dimensional matrix of interval candidates from 0 to number of active intervals.
+						</aside>
+					</section>
 					<section data-background-video="videos/s17.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s18.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s19.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s20.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s18.mp4" data-background-color="#000">
+						<aside class="notes">
+							Active list indexes the list of curvatures. All are 1 so no change (all are > 0.25).
+						</aside>
+					</section>
+					<section data-background-video="videos/s19.mp4" data-background-color="#000">
+						<aside class="notes">
+							Curvature list is turned into a list filled with indices that would sort it.
+							argsort in python (numpy), sortperm in julia.
+						</aside>
+					</section>
+					<section data-background-video="videos/s20.mp4" data-background-color="#000">
+						<aside class="notes">
+							We take last n_r (number of refinements) elements of the list.
+						</aside>
+					</section>
 					<section data-background-video="videos/s21.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s22.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s23.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s23.mp4" data-background-color="#000">
+						<aside class="notes">
+							Intervals to refine are now sorted.
+						</aside>
+					</section>
 					<section data-background-video="videos/s24.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s25.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s26.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s27.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s27.mp4" data-background-color="#000">
+						<aside class="notes">
+							This is where we started from before the refinement.
+						</aside>
+					</section>
 					<section data-background-video="videos/s28.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s29.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s29.mp4" data-background-color="#000">
+						<aside class="notes">
+							After one refinement, now we have 45 points.
+						</aside>
+					</section>
 					<section data-background-video="videos/s30.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s31.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s31.mp4" data-background-color="#000">
+						<aside class="notes">
+							Two refinements.
+						</aside>
+					</section>
 					<section data-background-video="videos/s32.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s33.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s34.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s33.mp4" data-background-color="#000">
+						<aside class="notes">
+							Three refinements.
+						</aside>
+					</section>
+					<section data-background-video="videos/s34.mp4" data-background-color="#000">
+						<aside class="notes">
+							Four
+						</aside>
+					</section>
 					<section data-background-video="videos/s35.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s36.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s37.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s36.mp4" data-background-color="#000">
+						<aside class="notes">
+							Five
+						</aside>
+					</section>
+					<section data-background-video="videos/s37.mp4" data-background-color="#000">
+						<aside class="notes">
+							Six
+						</aside>
+					</section>
 					<section data-background-video="videos/s38.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s39.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s40.mp4" data-background-color="#000"></section>
@@ -1065,10 +1187,22 @@
 					<section data-background-video="videos/s43.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s44.mp4" data-background-color="#000"></section>
 					<section data-background-video="videos/s45.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s46.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s47.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s46.mp4" data-background-color="#000">
+						<aside class="notes">
+							Twelve
+						</aside>
+					</section>
+					<section data-background-video="videos/s47.mp4" data-background-color="#000">
+						<aside class="notes">
+							Thirteen
+						</aside>
+					</section>
 					<section data-background-video="videos/s48.mp4" data-background-color="#000"></section>
-					<section data-background-video="videos/s49.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s49.mp4" data-background-color="#000">
+						<aside class="notes">
+							That's how you plot any function onto a cartesian plane.
+						</aside>
+					</section>
 					
 					<section data-background-video="videos/s50.mp4" data-background-color="#000">
 						<b><h1>Questions?</h1></b>
