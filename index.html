@@ -12,6 +12,15 @@
 
 		<!-- Theme used for syntax highlighted code -->
 		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+		<style>
+			.rotate_image {
+				-webkit-transform: rotate(90deg);
+				-moz-transform: rotate(90deg);
+				-ms-transform: rotate(90deg);
+				-o-transform: rotate(90deg);
+				transform: rotate(90deg);
+			}
+		</style>
 	</head>
 	<body>
 		<div class="reveal">
@@ -19,6 +28,9 @@
 				<section>
 					<h2>Smart Symbolic Graphing Calculator</h2>
 					<p>Julian Alvarez</p>
+					<aside class="notes">
+						Good luck me :)
+					</aside>
 				</section>
 				<section>
 					<h2>Background</h2>
@@ -30,11 +42,17 @@
 				</section>
 				<section>
 					<h2>Technologies Used</h2>
+					<aside class="notes">
+						2 Technologies
+					</aside>
 				</section>
 				<section>
 					<h2>LVGL</h2>
 					<section data-menu-title="LVGL Description">A lightweight embedded library for displays and touchscreens,
 						providing everything required to build fully-featured embedded GUIs.
+						<aside class="notes">
+							Light and Versatile Embedded Graphics Library
+						</aside>
 					</section>
 					<section data-menu-title="LVGL Info List">
 						<ul>
@@ -44,19 +62,31 @@
 							<li>Large library of widgets</li>
 							<li>FOSS C library (MIT)</li>
 						</ul>
+						<aside class="notes">
+							Here are some of the defining characteristics that led to LVGL being chosen.
+							(Big one is it being MIT-licensed)
+						</aside>
 					</section>
 				</section>
 				<section>
 					<h2>GIAC</h2>
 					<section>
 						FOSS Computer Algebra System (CAS) for Windows, MacOS, Unix-like, and embedded systems.
+						<aside class="notes">
+							Written by Dr. Bernard Parisse from the Fourier Institute at the University of Grenoble Alpes in Grenoble, France.
+						</aside>
 					</section>
 					<section>
 						<ul>
 							<li>Written in C++14</li>
 							<li>Uses GNU Build System</li>
 							<li>CAS computing kernel</li>
+							<li>FOSS GPL3 library</li>
 						</ul>
+						<aside class="notes">
+							Started in the year 2000. It is written for C++14. It will fail to compile on C++17 and newer. Only ever tried compiling it with the latest GNU compiler.
+							It is built with GNU tools, so I assume it may fail with the clang compiler.
+						</aside>
 					</section>
 					<section>
 						Already in use in calculators such as:
@@ -66,6 +96,9 @@
 							<li>Fx-9750GIII/9860GIII</li>
 							<li>TI Nspire</li>
 						</ul>
+						<aside class="notes">
+							Giac is native to the HP Prime and chosen as the CAS for Geogebra. Around 150,000 lines of C++ code.
+						</aside>
 					</section>
 					<section>
 						Available on the web at: <a href="https://www.geogebra.org/?lang=en">Geogebra</a>
@@ -77,22 +110,36 @@
 					<section>
 						<p class="r-fit-text">Raspberry Pi Zero 2 W</p>
 						<img src="piz2w.png" alt="Raspberry Pi Zero 2 W" width="60%">
+						<aside class="notes">
+							Originally meant to be the Teensy 4.1, but quickly encountered limitations with the ~8MB of program memory available. The CAS itself took more than 8MB with most of
+							its functionality stripped and compiled to be optimised for size. Decided on Pi zero 2 w to avoid wasting time getting it to work with the self-inflicted constraints.
+						</aside>
 					</section>
 					<section>
 						<p class="r-fit-text">320x240 Touchscreen with ILI9341 controller</p>
 						<img src="ili9341.JPG" alt="ILI9341 Touchscreen Display" width="60%">
+						<aside class="notes">
+							Connected to the pi via an SPI interface.
+						</aside>
 					</section>
 					<section>
 						<p class="r-fit-text">Handmade 35 button matrix</p>
+						<img class="rotate_image" src="buttons.jpg" alt="Handmade 35 button matrix" width="40%">
+						<aside class="notes">
+							Image is rotated to fit. It is held vertically.
+						</aside>
 					</section>
 					<section>
 						<p class="r-fit-text">MCP23017 Port Expander</p>
 						<img class="r-stretch" src="mcp23017.jpg" alt="MCP23107 Port Expander">
+						<aside class="notes">
+							Pi is connected to the port expander via i2c. Helps keep the pi tidy, and frees up GPIO pins for future use.
+						</aside>
 					</section>
 				</section>
 				<section>
 					<!-- <p class="r-fit-text">Hardware Design Overview</p> -->
-					<div class="mermaid">
+					<div class="mermaid" id="pichart">
 						<pre>
 							%%{init: {"flowchart": {"htmlLabels": false}} }%%
 							flowchart TD
@@ -104,9 +151,12 @@
 							D==>C
 						</pre>
 					</div>
+					<aside class="notes">
+						Nice flowchart showcasing the connections between the pi, the screen, and the port extender.
+					</aside>
 				</section>
 				<section>
-					<div class="mermaid">
+					<div class="mermaid" id="serverchart">
 						<pre>
 							%%{init: {"flowchart": {"htmlLabels": false}} }%%
 							flowchart TD
@@ -121,6 +171,9 @@
 							<li>Graphing</li>
 							<li>Functions</li>
 						</ul>
+						<aside class="notes">
+							All done remotely from a desktop client. All devices have to be connected to the same network.
+						</aside>
 					</section>
 					<section>
 						<p>Admin Collects usage data in form of logs</p>
@@ -131,12 +184,16 @@
 							<li>Button Presses</li>
 							<li>Journalctl</li>
 						</ul>
+						<aside class="notes">
+							They get serialized and sent back to the admin. Journalctl logs show kernel logs, just in case some funny business gets pulled by testtakers.
+							Calculators can revoke limitations imposed by an adminstrator at any time (Admins get notified of events).
+						</aside>
 					</section>
 				</section>
 				<section>
 					<section data-menu-title="Connection State Diagram">
 						<p>Calculator Connection State Diagram</p>
-						<div class="mermaid">
+						<div class="mermaid", id="calcdiagram">
 							<pre>
 								stateDiagram-v2 
 									noWifi : Not connected to an AP
@@ -152,7 +209,7 @@
 				</section>
 				<section data-menu-title="Admin Connect Sequence">
 					<section>
-					<div class="mermaid">
+					<div class="mermaid" id="infosearch1">
 						<pre>
 							sequenceDiagram
 								participant C as Calculator
@@ -166,7 +223,7 @@
 					Simple Admin Info Search
 					</section>
 					<section>
-						<div class="mermaid">
+						<div class="mermaid" id="infosearch2">
 							<pre>
 								sequenceDiagram
 									participant C as Calculator
@@ -182,7 +239,7 @@
 						<b>adminInfo</b> json is expected in return.
 					</section>
 					<section data-auto-animate>
-						ConnectionInfo Json
+						<b>ConnectionInfo Json</b>
 						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="2|3|4|5-9">
 							{
 								ssgcType: "connectionInfo",
@@ -195,9 +252,13 @@
 								}
 							}
 						</code></pre>
+						<aside class="notes">
+							Sent to every available adminstrator. Means that the calculator wants info about the admin.
+							ssgcType field is in every json sent to and from a calculator and an admin.
+						</aside>
 					</section>
 					<section data-auto-animate>
-						AdminInfo Json
+						<b>AdminInfo Json</b>
 						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="2|1-6">
 							{
 								ssgcType: "adminInfo",
@@ -206,6 +267,9 @@
 								adminExtra: "D2401 Exam Room"
 							}
 						</code></pre>
+						<aside class="notes">
+							Example of the json response to the information request.
+						</aside>
 					</section>
 				</section>
 				<section>
@@ -228,6 +292,12 @@
 									end
 							</pre>
 						</div>
+						<aside class="notes">
+							Sequence diagram showcases a possible sequence of events between a calculator and an admin.
+							Connection request is sent to the admin, which responds in kind with the restrictions desired.
+							Calculator can deny or accept, in this case, accept. (NOW CONNECTED!!!)
+							Afterwards they Asynchronously send data back and forth and have a good time.
+						</aside>
 					</section>
 					<section data-menu-title="Sequence Diagram (Loop & Revoke)">
 						<div class="mermaid">
@@ -949,57 +1019,58 @@
 						<h1>😕</h1><br>
 						<p>What kind of algorithm?</p>
 					</section>
-					<section background-transition="none" data-menu-title="Video Slides Start" data-background-video="s1.mp4" data-background-color="#000"></section>
-					<section background-transition="none" data-background-video="out/s1.mp4" data-background-color="#000"></section>
-					<section background-transition="none" data-background-video="out/s2.mp4" data-background-color="#000"></section>
-					<section background-transition="none" data-background-video="out/s3.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s4.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s5.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s6.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s7.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s8.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s9.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s10.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s11.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s12.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s13.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s14.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s15.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s16.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s17.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s18.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s19.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s20.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s21.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s22.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s23.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s24.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s25.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s26.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s27.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s28.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s29.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s30.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s31.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s32.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s33.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s34.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s35.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s36.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s37.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s38.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s39.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s40.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s41.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s42.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s43.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s44.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s45.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s46.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s47.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s48.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s49.mp4" data-background-color="#000"></section>
-					<section data-background-video="out/s50.mp4" data-background-color="#000">
+					<section data-menu-title="Video Slides Start" data-background-video="s1.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s1.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s2.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s3.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s4.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s5.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s6.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s7.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s8.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s9.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s10.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s11.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s12.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s13.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s14.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s15.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s16.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s17.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s18.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s19.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s20.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s21.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s22.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s23.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s24.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s25.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s26.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s27.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s28.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s29.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s30.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s31.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s32.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s33.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s34.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s35.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s36.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s37.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s38.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s39.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s40.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s41.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s42.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s43.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s44.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s45.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s46.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s47.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s48.mp4" data-background-color="#000"></section>
+					<section data-background-video="videos/s49.mp4" data-background-color="#000"></section>
+					
+					<section data-background-video="videos/s50.mp4" data-background-color="#000">
 						<b><h1>Questions?</h1></b>
 					</section>
 
@@ -1032,7 +1103,7 @@
 						curve: "linear",
 						useMaxWidth: true,
 					},
-					
+					max_width: "50%",
 				},
 				toolbar: {
 					position: 'bottom',
@@ -1047,11 +1118,19 @@
 					transitions: false,
 				},
 				dependencies: [
-					{ src: 'plugin/toolbar/toolbar.js', async: true }
+					{ src: 'plugin/toolbar/toolbar.js', async: true },
 				],
 				// Learn about plugins: https://revealjs.com/plugins/
 				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMermaid, RevealMenu]
+			}).then(function() {
+				let m = document.getElementById('pichart')
+				m.firstChild.style.setProperty('max-width', '50%')
+				document.getElementById('serverchart').firstChild.style.setProperty('max-width', '60%')
+				document.getElementById("calcdiagram").firstChild.style.setProperty('max-width', '60%')
+				document.getElementById("infosearch1").firstChild.style.setProperty('max-width', '60%')
+				document.getElementById("infosearch2").firstChild.style.setProperty('max-width', '60%')
 			});
+			
 		</script>
 	</body>
 </html>
