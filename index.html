@@ -777,9 +777,9 @@
 							}
 						</script></code></pre>
 					</section>
-					<section data-menu-title="Leverage CMake!!!">
+					<section data-menu-title="class Solve!">
 						<b>🔥 Solve 🔥</b>
-						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers><script type="text/template">
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="4|7-8|13|16|18|23"><script type="text/template">
 							class Solve
 							{
 								public:
@@ -788,18 +788,16 @@
 								Solve(){
 									giac::gen g("approx_mode:=1", &ctx);
 									giac::eval(g, &ctx);
-									assert(giac::approx_mode(&ctx) == true);
 								}
 
 								std::string call_giac(std::string input)
 								{      
-									//giac::approx_mode(false, &ctx); // Change graphing to calculate approximate values.
 									giac::gen g(input, &ctx);
-									std::cout << giac::eval(g, &ctx) << "\n";    
-									giac::gen args(input, &ctx);
 									std::string output = input + "\n";
 									try{
-										output = giac::gen2string(giac::eval(args, &ctx));
+										auto result = giac::eval(g, &ctx);
+										std::cout << result << "\n";;
+										output = giac::gen2string(result);
 									}
 									catch(...){
 										output = "ERROR: Something went wrong!\n";
@@ -809,8 +807,203 @@
 							};
 						</script></code></pre>
 					</section>
+					<section data-auto-animate data-menu-title="Back to Calculator.cpp">
+						<b>Calculator.cpp</b>
+						<pre data-id="code-animation"><code data-trim data-noescape data-line-numbers="46,47|50,51|53|54|55|58-61"><script type="text/template">
+							static void Calculator::active_ta_event_handler(lv_event_t* e)
+							{   
+								lv_event_code_t code = lv_event_get_code(e);
+								lv_obj_t* ta = lv_event_get_target(e);
+								lv_obj_t* parent = lv_obj_get_parent(ta);
+								if (code == LV_EVENT_CLICKED || code == LV_EVENT_FOCUSED)
+								{
+									/*Focus on the clicked text area*/
+									if (kb != NULL) lv_keyboard_set_textarea(kb, ta);
+									lv_obj_scroll_to_view(ta, LV_ANIM_OFF);
+									lv_obj_scroll_by(parent, 0, 15, LV_ANIM_OFF);
+								}
+								else if (code == LV_EVENT_READY)
+								{
+									if(total > 60)
+									{
+										lv_obj_clean(parent);
+										Calculator::main_screen_driver(parent, false);
+										return;
+									}
+									LV_LOG_USER("Ready, current text: %s", lv_textarea_get_text(ta));
+
+									Solve* solver = static_cast<Solve*>(e->user_data);
+									std::string func_expression = std::string(lv_textarea_get_text(e->target));
+									std::string output;
+									bool blacklisted = false;
+									//Check to see if functions are restricted
+									if(global_state.permissions.contains("permissions") 
+										&& global_state.permissions["permissions"].contains("functionRestrictionsEnable")
+										&& global_state.permissions["permissions"]["functionRestrictionsEnable"].get<bool>()){
+										
+										std::vector<std::string> blacklistedFunctions;
+										if (global_state.permissions.contains("functionBlacklist"))
+											blacklistedFunctions = global_state.permissions["functionBlacklist"].get<std::vector<std::string>>();
+
+										
+										for(std::string const& function: blacklistedFunctions){
+											if (func_expression.find(function) != std::string::npos){
+												output = "Function is blacklisted!";
+												bl = true;
+												break;
+											}
+										}
+									}
+									
+									if (!blacklisted)
+										output = solver->call_giac(func_expression);
+
+									/*Reading Time Info For Logging.*/
+									const std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+									std::string current_time(std::ctime(&time));
+
+									History::HistoryManager manager;
+									History::InputHistory temp;
+									manager.push_back(History::InputHistory(current_time, "guest", func_expression, output));
+									
+									// debugging info.
+									#if 0
+									temp = manager.get_last();
+									std::cout << "time: " << temp.time << "\tuser: " << temp.user << "\tinput: " << temp.input << "\toutput: " << temp.output << "\n";
+									#endif
+
+									const char *copy_input = lv_textarea_get_text(ta);
+									
+									/*Create the new text areas*/
+									Calculator::lv_input_history_ta(parent, copy_input, ta);
+									Calculator::lv_result_ta(parent, output, ta);
+									lv_obj_align(ta, LV_ALIGN_BOTTOM_MID, 0, ( 35 * total) + 35);
+									lv_textarea_set_text(ta, "");
+									lv_obj_scroll_to_view(ta, LV_ANIM_OFF);
+
+									/*Put kb in view*/
+									lv_obj_align_to(kb, parent, LV_ALIGN_BOTTOM_MID, 0, 0);
+									lv_obj_scroll_to_view(kb, LV_ANIM_OFF);
+									if(!lv_obj_has_flag(kb, LV_OBJ_FLAG_HIDDEN))
+									{
+										lv_obj_set_y(ta, lv_obj_get_y_aligned(ta) - 80);
+									}
+									lv_obj_scroll_by(parent, 0, 15, LV_ANIM_OFF);
+								}
+
+							}
+						</script></code></pre>
+					</section>
 				</section>
-				
+				<section>
+					<section data-auto-animate data-menu-title="How plot?">
+						<p>Plotting?</p>
+					</section>
+					<section data-auto-animate data-menu-title="Plotting video">
+						<p>Plotting?</p>
+						<video width="60%" data-autoplay data-background-video-loop="loop" src="calculatorplotvid.mp4"></video>
+					</section>
+					<section data-auto-animate data-menu-title="Too much code :(">
+						<p>A bit too much code to properly explain within 20 minutes.</p>
+					</section>
+					<section data-auto-animate data-menu-title="Light overview!">
+						<p>A bit too much code to properly explain within 20 minutes.</p>
+						<p>😥</p>
+					</section>
+					<section data-menu-title="Main points of plotting.">
+						<ul>
+							<li>Point</li>
+							<li class="fragment">PlotDataBlock</li>
+							<li class="fragment">Plot</li>
+							<li class="fragment">Graph</li>
+						</ul>
+					</section>
+					<section data-menu-title="Point">
+						<h2><b>Point</b></h2><br>
+						A cartesian coordinate where <code>x</code> and <code>y</code> are of type <code>double</code>
+					</section>
+					<section data-menu-title="PlotDataBlock">
+						<h2><b>PlotDataBlock</b></h2><br>
+						Holds a <code>vector</code> of <code>Point</code>s and their <i>domain</i>.
+					</section>
+					<section data-auto-animate data-menu-title="Plot">
+						<h2><b>Plot</b></h2><br>
+						Given a <code>string</code> representing a mathematical expression, returns two <code>vector</code>s of <code>double</code>s
+						representing coordinates meant for usage by <b>Graph</b>.
+					</section>
+					<section data-auto-animate data-menu-title="Plot cont.">
+						<h2><b>Plot</b></h2><br>
+						Uses an algorithm that computes the second derivative numerically to estimate optimal <i>x-coordinates</i> 
+						for plotting and minimize aliasing.
+					</section>
+					<section data-auto-animate data-menu-title="Graph">
+						<h2><b>Graph</b></h2>
+						Handles rendering of <code>Plot</code>s onto the screen. Interfaces with <b>LVGL</b>.
+					</section>
+				</section>
+				<section>
+					<section data-auto-animate data-menu-title="Algorithm confusion?">
+						<h1>😕</h1>
+					</section>
+					<section data-auto-animate data-menu-title="Algorithm confusion?">
+						<h1>😕</h1><br>
+						<p>What kind of algorithm?</p>
+					</section>
+					<section background-transition="none" data-menu-title="Video Slides Start" data-background-video="s1.mp4" data-background-color="#000"></section>
+					<section background-transition="none" data-background-video="out/s1.mp4" data-background-color="#000"></section>
+					<section background-transition="none" data-background-video="out/s2.mp4" data-background-color="#000"></section>
+					<section background-transition="none" data-background-video="out/s3.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s4.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s5.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s6.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s7.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s8.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s9.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s10.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s11.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s12.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s13.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s14.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s15.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s16.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s17.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s18.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s19.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s20.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s21.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s22.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s23.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s24.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s25.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s26.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s27.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s28.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s29.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s30.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s31.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s32.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s33.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s34.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s35.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s36.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s37.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s38.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s39.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s40.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s41.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s42.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s43.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s44.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s45.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s46.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s47.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s48.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s49.mp4" data-background-color="#000"></section>
+					<section data-background-video="out/s50.mp4" data-background-color="#000">
+						<b><h1>Questions?</h1></b>
+					</section>
+
+				</section>
 			</div>
 		</div>
 
